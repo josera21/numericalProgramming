@@ -10,8 +10,6 @@ graficar <- function(prob, p, n) {
   axis(2)
   abline(v=seq(-4,prob,0.001),col="red")
   polygon(c(l,length(prob)),c(dnorm(l),length(prob)),col="white",border="black")
-  mtext(paste("P(Z<z)=",prob), adj=1)
-  mtext(paste("Para Z<=",p, " n=",n), side=4, adj=1)
 }
 
 trapecio <- function(a, b, n, f) {
@@ -43,38 +41,26 @@ trapecio <- function(a, b, n, f) {
   return (integral)
 }
 
-tablaDistribucionNormal <- function(p, n) {
-  tnormal = matrix(,nrow=35, ncol=1, byrow=TRUE)
-  terror = matrix(,nrow=35, ncol=1, byrow=TRUE)
-  tintegral = matrix(,nrow=35, ncol=1, byrow=TRUE)
+tablaDistribucionNormal <- function(n) {
+  tnormal = matrix(,nrow=35, ncol=10, byrow=TRUE)
 
   rownames(tnormal) = seq(0, 3.4, by=0.1)
-  colnames(tnormal) = c("R")
-  colnames(terror) = c("Error")
-  colnames(tintegral) = c("Integral")
+  colnames(tnormal) = seq(0.0, .09, by=0.01)
   
   t = seq(0, 3.5, 0.1)
+  t2 = seq(0.0, .09, .01)
 
   for (i in 1:35) {
+    for (k in 2:10) {
+      rtrapecio = trapecio(0,t[i]+t2[k], n, f=fx)
+      tnormal[i,k] = round(rtrapecio + 0.5, 4)
+    }
     rtrapecio = trapecio(0, t[i], n, f=fx)
-    tnormal[i,] = rtrapecio + 0.5
-    terror[i,] = (tnormal[i] - rtrapecio) / tnormal[i]
-    tintegral[i,] = rtrapecio
+    tnormal[i,1] = round(rtrapecio + 0.5, 4)
   }
 
-  if(p < 0) {
-    prob = trapecio(0, p, n, f=fx)
-  } 
-  if(p > 3.4) {
-    prob = 1
-  } else {
-    prob = trapecio(0, p, n, f=fx) + 0.5
-  }
-
-  graficar(prob, p, n)
-
-  tresultados = cbind(tnormal, terror, tintegral)
-  imprimir = list("Tabla Normal estandar con Trapecio" = tresultados, "Probabilidad P(Z<z) " = prob)
+  tresultados = cbind(tnormal)
+  imprimir = list("Tabla Distribucion Normal estandar con Trapecio" = tresultados)
 
   return (imprimir)
 }
@@ -85,25 +71,50 @@ ejecutar <- function() {
   salir = FALSE
 
   while(!salir) {
-    opc <- menu(opts, title="Ejemplos Distribucion normal con la Regla del Trapecio")
+    opc <- menu(opts, title="Distribucion normal con la Regla del Trapecio")
 
     if(opc == 1) {
-      p = 1.1
       n = 500 
-      resultado <- tablaDistribucionNormal(p,n)
+      resultado <- tablaDistribucionNormal(n)
       print(resultado)
     }
     if(opc == 2) {
-      opc2 <- menu(opts2,  title="Elige una opcion para correr el ejemplo")
+      opc2 <- menu(opts2,  title="Elige una opcion")
 
       if(opc2 == 1) {
-        prob = trapecio(0, 5, 100, f=dnorm) + 0.5
+        print("Nota: con media = 0 y desviacion estandar = 1")
+        x <- as.numeric(readline("Valor de x: "))
+        media = 0
+        desvStandar = 1
+        z = (x-media) / desvStandar
+        
+        prob = trapecio(0, z, 100, f=dnorm) + 0.5
+        
+        graficar(prob, z, 100)
+        mtext(paste("P(X<x)=",round(prob,4)), adj=1)
+        mtext(paste("Para X<=",z, " n=",100), side=3)
+
         print("--- RESULTADO ---")
         print(paste("P (X<x): ", prob))
         print("-----------------")
       }
       if(opc2 == 2) {
-        prob = trapecio(2, 7, 100, f=dnorm)
+        print("Nota: con media = 0 y desviacion estandar = 1")
+        print("P{ a<X<b }")
+
+        a <- as.numeric(readline("Valor de a: "))
+        b <- as.numeric(readline("Valor de b: "))
+        media = 0
+        desvStandar = 1
+        a = (a-media) / desvStandar
+        b = (b-media) / desvStandar
+
+        prob = trapecio(a, b, 100, f=dnorm)
+
+        graficar(prob, a, 100)
+        mtext(paste("P(",a,"<X<",b,")=",round(prob,4)), adj=1)
+        mtext(paste("Para P(",a,"<X<",b,")", " n=",100), side=3)
+
         print("--- RESULTADO ---")
         print(paste("P (a<X<b): ", prob))
         print("-----------------")
